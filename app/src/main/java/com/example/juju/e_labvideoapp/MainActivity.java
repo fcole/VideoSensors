@@ -81,9 +81,9 @@ public class MainActivity extends Activity implements SensorEventListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        //accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        //gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotv = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
@@ -139,10 +139,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             mCamera = Camera.open(findBackFacingCamera());
             mPreview.refreshCamera(mCamera);
         }
-        //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        //sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, rotv, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, rotv, SensorManager.SENSOR_DELAY_FASTEST);
 
 
 
@@ -357,7 +357,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             String timeStamp = String.valueOf((new Date()).getTime());
             writer.println(timeStamp + "," +
                            longitude_original + "," + latitude_original + "," +
-                           rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy);
+                           rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy + "," +
+                           linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
+                           gyro_x + "," + gyro_y + "," + gyro_z + "," +
+                           heading);
         }
     }
 
@@ -374,7 +377,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         //        + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
         writer.println("Timestamp" + "," +
                        "Longitude" + "," + "Latitude" + "," +
-                       "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc");
+                       "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc" + "," +
+                       "Acc X" + "," + "Acc Y" + "," + "Acc Z" + "," +
+                       "Gyro X" + "," + "Gyro Y" + "," + "Gyro Z" + "," +
+                       "Heading");
         LocationManager original = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location original_location = original.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
@@ -400,12 +406,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorManager;
 
-    //private Sensor accelerometer;
-    //private Sensor head;
-    //private Sensor gyro;
+    private Sensor accelerometer;
+    private Sensor head;
+    private Sensor gyro;
     private Sensor rotv;
 
-    /*
     float linear_acc_x = 0;
     float linear_acc_y = 0;
     float linear_acc_z = 0;
@@ -415,7 +420,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     float gyro_x = 0;
     float gyro_y = 0;
     float gyro_z = 0;
-    */
 
     float rotv_x = 0;
     float rotv_y = 0;
@@ -436,7 +440,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             rotv_w = event.values[3];
             rotv_accuracy = event.values[4];
         }
-        /*
         if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             linear_acc_x = event.values[0];
             linear_acc_y = event.values[1];
@@ -457,12 +460,13 @@ public class MainActivity extends Activity implements SensorEventListener {
             gyro_y = event.values[1];
             gyro_z = event.values[2];
         }
+        /*
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
         */
     }
     String[] options = {"1080p","720p","480p"};
-    String[] options1 = {"15 Hz","10 Hz"};
+    String[] options1 = {"10 Hz", "20 Hz", "30 Hz"};
     String[] options2 = {"10 fps","20 fps","30 fps"};
 
 
@@ -503,18 +507,24 @@ public class MainActivity extends Activity implements SensorEventListener {
         if(rate == 100) {
             setting = "10 Hz";
         }
-        else if(rate == 67){
-            setting = "15 Hz";
+        else if(rate == 50){
+            setting = "20 Hz";
+        }
+        else if(rate == 33){
+            setting = "30 Hz";
         }
         builder.setTitle("Pick Data Save Rate, Current setting: " + setting)
                 .setItems(options1, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // The 'which' argument contains the index position
                         // of the selected item
-                        if(which == 0){
-                            rate = 67 ;
+                        if(which == 2){
+                            rate = 33;
                         }
-                        else if (which == 1){
+                        else if(which == 1){
+                            rate = 50;
+                        }
+                        else if (which == 0){
                             rate = 100;
                         }
                     }
